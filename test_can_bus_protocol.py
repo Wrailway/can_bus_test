@@ -407,17 +407,14 @@ class TestCanProtocol:
         while attempt_count < max_attempts:
             logger.info(f'等待设备重启中...{attempt_count}')
             time.sleep(delay_time)
-            # if self.bus is None :
             self.bus = setup_can_bus()
             if(attempt_count % 5 == 0  and self.isNotNone(self.bus)):
-                # response = self.client.read_from_register(address=ROH_NODE_ID,node_id=target_node_id)
                 response = read_registers(bus=self.bus,arbitration_id=target_node_id,start_address=ROH_NODE_ID,register_count=1)
                 if(self.isNotNone(response=response)):
                     logger.info(f'设备已启动')
                     break
             attempt_count += 1
             
-    # @pytest.mark.skip('暂时跳过 写node id case')        
     def test_write_nodeID_version(self):
         self.print_test_info(status=self.TEST_START,info='write node id,The normal range is [0, 255]')
         verify_sets = [
@@ -438,7 +435,7 @@ class TestCanProtocol:
                 response = write_registers(self.bus, arbitration_id=current_node_id,start_address=ROH_NODE_ID,register_count=1, data=value)
                 assert response,f'写寄存器{ROH_NODE_ID}失败\n'
                 
-                self.wait_device_reboot(60,1,data)
+                self.wait_device_reboot(max_attempts=60,delay_time=1,target_node_id=data)
                 read_response = read_registers(bus=self.bus, arbitration_id=data,start_address=ROH_NODE_ID, register_count=1)
                 assert (read_response & 0xFF) == data, f"从寄存器{ROH_NODE_ID}读出的值{read_response}与写入的值{data}不匹配"
                 logger.info(f"从寄存器{ROH_NODE_ID}读出的值{read_response}与写入的值{data}匹配成功\n")
@@ -449,7 +446,7 @@ class TestCanProtocol:
         #恢复默认值
         try:
             write_response = write_registers(self.bus, arbitration_id=255,start_address=ROH_NODE_ID,register_count=1, data=NODE_ID)
-            self.wait_device_reboot(60,1,self.to_integer(NODE_ID))
+            self.wait_device_reboot(max_attempts=60,delay_time=1,target_node_id=self.to_integer(NODE_ID))
             assert write_response, f"恢复默认值失败\n"
             read_response = read_registers(bus=self.bus, arbitration_id=self.to_integer(NODE_ID),start_address=ROH_NODE_ID, register_count=1)
             assert (read_response & 0xFF) == NODE_ID[0], f"从寄存器{ROH_NODE_ID}读出的值{read_response}与写入的值{data}不匹配"
