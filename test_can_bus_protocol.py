@@ -1,7 +1,7 @@
 import time
 import pytest
 import logging
-from can_bus_operator import setup_can_bus,close_can_bus, read_registers, write_registers
+from can_bus_operator import setup_can_bus,close_can_bus, read_registers, write_registers,send_broadcast
 
 # ModBus-RTU registers for ROH
 MODBUS_PROTOCOL_VERSION_MAJOR = 1
@@ -3124,3 +3124,8 @@ class TestCanProtocol:
         except Exception as e:
             logger.error(f"读取寄存器<{ROH_FINGER_ANGLE5}>失败,发生异常: {e}")
             pytest.fail(f'读取寄存器<{ROH_FINGER_ANGLE5}>失败,发生异常')
+            
+    def test_send_broadcast(self):
+        self.print_test_info(status=self.TEST_START,info='The master station scans the slave stations and obtains device information by sending broadcast messages(CanID = 0x7FF)')
+        assert send_broadcast(bus=self.bus),f'无法通过发送广播方式，从从站设备获取信息，验证失败'
+        logger.info('成功通过发送广播方式，从从站设备获取信息，验证通过')

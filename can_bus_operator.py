@@ -219,31 +219,82 @@ def write_registers(bus, arbitration_id=2, start_address=None, register_count=1,
             else:
                 logger.warning(f"未知应答格式: bit7_6={bit7_6}, bit5_4={bit5_4}")
     return False
-
-
-if __name__ == "__main__":
-    # 初始化 CAN 总线
-    can_bus = setup_can_bus()
-
-    if can_bus:
-        arbitration_id = 0x2  # 示例仲裁 ID
-
-        # 写入寄存器
-        write_data = [0xFF,0xFF]  # 2-247  F7
-        write_response = write_registers(can_bus, arbitration_id=2, start_address=1155, register_count=1, data=write_data)
-        if write_response is True:
-            logger.info("Write registers success\n")
-        elif isinstance(write_response, tuple):
-            logger.info(f"Write registers failed, error code: {write_response}")
-            
-         # 读取寄存器
-        read_response = read_registers(can_bus, arbitration_id=2, start_address=1155, register_count=1)
-        if read_response is not None:
-            logger.info(f"Read registers success, values: {read_response}")
-        elif isinstance(read_response, tuple):
-            logger.info(f"Read registers failed, error code: {read_response}")
     
+def get_version(response,byte_num = 1):
+    swapped_response = ((response & 0xFF) << 8) | ((response >> 8) & 0xFF)
+    if byte_num ==1:
+        return (swapped_response >> 8) & 0xFF
+    else:#系统修订版本号
+        return swapped_response
+
+def send_broadcast(bus):
+    """
+    发送广播消息，请求从机返回设备版本信息
+    :param bus: CAN 总线对象
+    """
+    # 构建广播请求帧
+    byte0 = (MANAGEMENT_COMMAND << 6) | (MANAGEMENT_COMMAND << 4) | 0x00
+    byte1 = 0x00
+    request_frame = [byte0, byte1] + [0x00] * 6
+
+    # 发送广播消息
+    arbitration_id = 0x7FF
+    if send_can_message(bus, arbitration_id, request_frame):
+        time.sleep(WAIT_TIME)
+        # 接收从机响应
+        response_msg = receive_can_message(bus)
+        if response_msg:
+            response_data = response_msg.data
+            byte0 = response_data[0]
+            bit7_6 = (byte0 & 0xC0) >> 6
+            bit5_4 = (byte0 & 0x30) >> 4
+            hand_id = response_data[1]
+            if bit7_6 == MANAGEMENT_COMMAND and bit5_4 == MANAGEMENT_COMMAND:
+                protocol_sub_version = response_data[2]
+                protocol_main_version = response_data[3]
+                system_sub_version = response_data[4]
+                system_main_version = response_data[5]
+                system_revision_version = (response_data[6] << 8) | response_data[7]
+                logger.info(f"从机响应 - HandID: {hand_id}")
+                logger.info(f"协议子版本: {get_version(protocol_sub_version,1)}")
+                logger.info(f"协议主版本: {get_version(protocol_main_version,1)}")
+                logger.info(f"系统子版本: {get_version(system_sub_version,1)}")
+                logger.info(f"系统主版本: {get_version(system_main_version,1)}")
+                logger.info(f"系统修订版本号: {get_version(system_revision_version,2)}")
+                return True
+            else:
+                logger.warning(f"未知应答格式: bit7_6={bit7_6}, bit5_4={bit5_4}")
+                return False
+        else:
+            logger.error('收到的信息为空')
+            return False
+    else:
+        return False
+
+
+# if __name__ == "__main__":
+#     # 初始化 CAN 总线
+#     can_bus = setup_can_bus()
+
+#     if can_bus:
+#         arbitration_id = 0x2  # 示例仲裁 ID
+
+#         # # 写入寄存器
+#         # write_data = [0xFF,0xFF]  # 2-247  F7
+#         # write_response = write_registers(can_bus, arbitration_id=2, start_address=1155, register_count=1, data=write_data)
+#         # if write_response is True:
+#         #     logger.info("Write registers success\n")
+#         # elif isinstance(write_response, tuple):
+#         #     logger.info(f"Write registers failed, error code: {write_response}")
+            
+#         #  # 读取寄存器
+#         # read_response = read_registers(can_bus, arbitration_id=2, start_address=1155, register_count=1)
+#         # if read_response is not None:
+#         #     logger.info(f"Read registers success, values: {read_response}")
+#         # elif isinstance(read_response, tuple):
+#         #     logger.info(f"Read registers failed, error code: {read_response}")
+#         send_broadcast(can_bus)
         
 
-        # 关闭 CAN 总线连接
-        close_can_bus(can_bus)
+#         # 关闭 CAN 总线连接
+#         close_can_bus(can_bus)
