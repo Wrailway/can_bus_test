@@ -330,6 +330,10 @@ class TestCanProtocol:
         version_str = f"V{major_version}.{minor_version}"
         return version_str
     
+    def to_revision(self,response):
+        revision = ((response & 0xFF) << 8) | ((response >> 8) & 0xFF)
+        return f'V{revision}'
+    
     def to_integer(self,byte_list):
         """
         将包含两个字节的列表转换为整数，列表中第一个元素为低位字节，第二个元素为高位字节
@@ -367,7 +371,7 @@ class TestCanProtocol:
         try:
             response = read_registers(bus=self.bus, start_address=ROH_FW_REVISION, register_count=1)
             assert response is not None,f'读取寄存器<{ROH_FW_REVISION}>失败'
-            logger.info(f'读取寄存器<{ROH_FW_REVISION}>成功,读取的值为:{self.to_version(response=response)}')
+            logger.info(f'读取寄存器<{ROH_FW_REVISION}>成功,读取的值为:{self.to_revision(response=response)}')
         except Exception as e:
             logger.error(f"读取寄存器<{ROH_FW_REVISION}>失败,发生异常: {e}")
             pytest.fail(f'读取寄存器<{ROH_FW_REVISION}>失败,发生异常')
