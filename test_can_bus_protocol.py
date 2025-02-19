@@ -331,7 +331,8 @@ class TestCanProtocol:
         return version_str
     
     def to_revision(self,response):
-        revision = ((response & 0xFF) << 8) | ((response >> 8) & 0xFF)
+        # revision = ((response & 0xFF) << 8) | ((response >> 8) & 0xFF) 
+        revision = response # 高低位已经兑换过，这里不需要额外操作
         return f'V{revision}'
     
     def to_integer(self,byte_list):

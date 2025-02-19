@@ -272,29 +272,29 @@ def send_broadcast(bus):
         return False
 
 
-# if __name__ == "__main__":
-#     # 初始化 CAN 总线
-#     can_bus = setup_can_bus()
+if __name__ == "__main__":
+    # 初始化 CAN 总线
+    can_bus = setup_can_bus()
 
-#     if can_bus:
-#         arbitration_id = 0x2  # 示例仲裁 ID
+    if can_bus:
+        arbitration_id = 0x2  # 示例仲裁 ID
 
-#         # # 写入寄存器
-#         # write_data = [0xFF,0xFF]  # 2-247  F7
-#         # write_response = write_registers(can_bus, arbitration_id=2, start_address=1155, register_count=1, data=write_data)
-#         # if write_response is True:
-#         #     logger.info("Write registers success\n")
-#         # elif isinstance(write_response, tuple):
-#         #     logger.info(f"Write registers failed, error code: {write_response}")
+        # # 写入寄存器
+        # write_data = [0xFF,0xFF]  # 2-247  F7
+        # write_response = write_registers(can_bus, arbitration_id=2, start_address=1155, register_count=1, data=write_data)
+        # if write_response is True:
+        #     logger.info("Write registers success\n")
+        # elif isinstance(write_response, tuple):
+        #     logger.info(f"Write registers failed, error code: {write_response}")
             
-#         #  # 读取寄存器
-#         # read_response = read_registers(can_bus, arbitration_id=2, start_address=1155, register_count=1)
-#         # if read_response is not None:
-#         #     logger.info(f"Read registers success, values: {read_response}")
-#         # elif isinstance(read_response, tuple):
-#         #     logger.info(f"Read registers failed, error code: {read_response}")
-#         send_broadcast(can_bus)
+        #  # 读取寄存器
+        # read_response = read_registers(can_bus, arbitration_id=2, start_address=1155, register_count=1)
+        # if read_response is not None:
+        #     logger.info(f"Read registers success, values: {read_response}")
+        # elif isinstance(read_response, tuple):
+        #     logger.info(f"Read registers failed, error code: {read_response}")
+        send_broadcast(can_bus)
         
 
-#         # 关闭 CAN 总线连接
-#         close_can_bus(can_bus)
+        # 关闭 CAN 总线连接
+        close_can_bus(can_bus)
