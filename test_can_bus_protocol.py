@@ -3134,3 +3134,43 @@ class TestCanProtocol:
         self.print_test_info(status=self.TEST_START,info='The master station scans the slave stations and obtains device information by sending broadcast messages(CanID = 0x7FF)')
         assert send_broadcast(bus=self.bus),f'无法通过发送广播方式，从从站设备获取信息，验证失败'
         logger.info('成功通过发送广播方式，从从站设备获取信息，验证通过')
+      
+    # @pytest.mark.skip('暂时跳过多个寄存器的读操作')    
+    def test_read_multiple_holding_registers(self):
+        self.print_test_info(status=self.TEST_START,info='read multiple registers')
+        try:
+            response = read_registers(bus=self.bus, start_address=ROH_FINGER_CURRENT_LIMIT0, register_count=3)
+            assert response is not None,f'读取寄存器起始地址<{ROH_FINGER_CURRENT_LIMIT0}>连续3个寄存器的值失败'
+            logger.info(f'读取寄存器起始地址<{ROH_FINGER_CURRENT_LIMIT0}>连续3个寄存器的值成功,读取的值为:{response}')
+        except Exception as e:
+            logger.error(f"读取寄存器起始地址<{ROH_FINGER_CURRENT_LIMIT0}>连续3个寄存器的值失败,发生异常: {e}")
+            pytest.fail(f'读取寄存器起始地址<{ROH_FINGER_CURRENT_LIMIT0}>连续3个寄存器的值失败,发生异常')
+            
+    # @pytest.mark.skip('暂时跳过多个寄存器的写操作')
+    def test_write_multiple_holding_registers(self): 
+        self.print_test_info(status=self.TEST_START,info='write multiple registers')
+        verify_sets = [0x58,0x02,# 600
+                       0x58,0x02,# 600
+                       0x58,0x02# 600
+        ]
+        try:
+            response = write_registers(self.bus, start_address=ROH_FINGER_CURRENT_LIMIT0, register_count=3, data=verify_sets)
+            assert response,f'写寄存器起始地址<{ROH_FINGER_CURRENT_LIMIT0}>,连续3个寄存器失败'
+            logger.info(f'写寄存器起始地址<{ROH_FINGER_CURRENT_LIMIT0}>,连续3个寄存器成功')
+        except Exception as e:
+            logger.error(f"写寄存器起始地址<{ROH_FINGER_CURRENT_LIMIT0}>,连续3个寄存器失败,发生异常: {e}")
+            pytest.fail(f'写寄存器起始地址<{ROH_FINGER_CURRENT_LIMIT0}>,连续3个寄存器失败,发生异常')
+            
+         # 恢复默认值
+        logger.info('恢复默认值')
+        try:
+            default_sets = [0xB0,0x04,# 1200
+                            0xB0,0x04,# 1200
+                            0xB0,0x04 # 1200
+        ]
+            write_response = write_registers(self.bus, start_address=ROH_FINGER_CURRENT_LIMIT0, register_count=3, data=default_sets)
+            assert write_response, f"恢复默认值失败\n"
+            logger.info("恢复默认值成功\n")
+        except Exception as e:
+            logger.error(f"恢复默认值发生了异常: {e}")
+        
